@@ -1,30 +1,26 @@
 import React, {useState, useEffect} from 'react';
-// import io from 'socket.io-client';
-import Q from '@nmq/q/client';
+import useForm from './hooks/useForm';
+import useSocket from './hooks/useSocket';
+import useQ from './hooks/useQ';
 
-import useForm from './hooks/useForm'
-import useSocket from './hooks/useSocket'
-
-// Connect outside of the render cycle ...
-// const socket = io.connect('http://localhost:3000');
-const queue = new Q('deeds');
 
 const App = (props) => {
 
-  const [values, handleChange, handleSubmit] = useForm(emitQServerEvents)
+  const [values, handleChange, handleSubmit] = useForm(handlePublish)
   const [queueMessage, setQueueMessage] = useState({});
   const [socketMessage, setSocketMessage] = useState({});
   const [handleSocketOn, handleSocketEmit] = useSocket({});
+  const [ queuePublish, queueSubscribe] = useQ('deeds')
 
 
-  function emitQServerEvents(values){
-    Q.publish('deeds', 'work', values);
-
+  function handlePublish(values){
+    queuePublish('deeds', 'work', values);
     handleSocketEmit('words', values);
   }
 
+
   useEffect( () => {
-    queue.subscribe('work', message => {
+    queueSubscribe('work', message => {
       setQueueMessage(message);
     });
 
